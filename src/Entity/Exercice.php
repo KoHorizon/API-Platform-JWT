@@ -24,6 +24,10 @@ class Exercice
     #[ORM\Column(type: 'integer')]
     private $reps;
 
+    #[ORM\ManyToOne(targetEntity: Seance::class, inversedBy: 'exercices')]
+    #[ORM\JoinColumn(nullable: false)]
+    private $Seance;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -61,6 +65,18 @@ class Exercice
     public function setReps(int $reps): self
     {
         $this->reps = $reps;
+
+        return $this;
+    }
+
+    public function getSeance(): ?Seance
+    {
+        return $this->Seance;
+    }
+
+    public function setSeance(?Seance $Seance): self
+    {
+        $this->Seance = $Seance;
 
         return $this;
     }
