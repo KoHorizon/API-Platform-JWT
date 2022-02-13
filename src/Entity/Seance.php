@@ -3,13 +3,34 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Controller\GetSeanceController;
 use App\Repository\SeanceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SeanceRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    collectionOperations: [
+        'get'=> [
+            "method" => "GET",
+            "path" => "/seances",
+            "controller" => GetSeanceController::class,
+        ],
+        'post'
+    ],
+    itemOperations: [
+        'get',
+        'delete',
+        'put',
+    ],
+
+    denormalizationContext: ['groups' => ['seance:write']],
+    normalizationContext: ['groups' => ['seance:read']],
+)]
 class Seance
 {
     #[ORM\Id]
@@ -18,16 +39,20 @@ class Seance
     private $id;
 
     #[ORM\Column(type: 'datetime')]
+    #[Groups(["seance:read"])]
     private $date;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'seances')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["seance:read"])]
     private $User;
 
     #[ORM\OneToMany(mappedBy: 'Seance', targetEntity: Exercice::class, orphanRemoval: true)]
+    #[Groups(["seance:read", "seance:write"])]
     private $exercices;
 
     #[ORM\OneToOne(mappedBy: 'Seance', targetEntity: Avis::class, cascade: ['persist', 'remove'])]
+    #[Groups(["seance:read", "seance:write"])]
     private $avis;
 
     public function __construct()

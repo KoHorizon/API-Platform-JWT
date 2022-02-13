@@ -3,11 +3,32 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Controller\GetAvisController;
 use App\Repository\AvisRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AvisRepository::class)]
-#[ApiResource]
+#[ApiResource(
+
+    collectionOperations: [
+        'post'=> [
+            'denormalization_context' => ['groups' => ['write:avis']],
+        ],
+        'get'=> [
+            "method" => "GET",
+            "path" => "/avis",
+            "controller" => GetAvisController::class,
+        ]   
+    ],
+    itemOperations: [
+        'get' => ["security" => "is_granted('ROLE_ADMIN') or object.getUser() == user"],
+        'delete' => ["security" => "is_granted('ROLE_ADMIN') or object.getUser == user"],
+        'put' => ["security" => "is_granted('ROLE_ADMIN') or object.getUser == user"],
+    ],
+    normalizationContext: ['groups' => ['read:avis']],
+)]
 class Avis
 {
     #[ORM\Id]
@@ -16,16 +37,20 @@ class Avis
     private $id;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(["read:avis", "write:avis"])]
     private $content;
 
     #[ORM\Column(type: 'integer')]
-    private $difficulty_lvl;
+    #[Groups(["read:avis", 'write:avis'])]
+    private $difficultyLvl;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'avis')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["read:avis"])]
     private $User;
 
     #[ORM\OneToOne(inversedBy: 'avis', targetEntity: Seance::class, cascade: ['persist', 'remove'])]
+    #[Groups(["read:avis","write:avis"])]
     private $Seance;
 
     public function getId(): ?int
@@ -47,12 +72,12 @@ class Avis
 
     public function getDifficultyLvl(): ?int
     {
-        return $this->difficulty_lvl;
+        return $this->difficultyLvl;
     }
 
-    public function setDifficultyLvl(int $difficulty_lvl): self
+    public function setDifficultyLvl(int $difficultyLvl): self
     {
-        $this->difficulty_lvl = $difficulty_lvl;
+        $this->difficultyLvl = $difficultyLvl;
 
         return $this;
     }

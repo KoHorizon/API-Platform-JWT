@@ -23,7 +23,6 @@ use Symfony\Component\Validator\Constraints as Assert;
         'get',
         'delete',
     ],
-
     denormalizationContext: ['groups' => ['user:write']],
     normalizationContext: ['groups' => ['user:read']],
 )]
@@ -61,10 +60,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'User', targetEntity: Avis::class, orphanRemoval: true)]
     private $avis;
 
+    #[ORM\OneToMany(mappedBy: 'User', targetEntity: Exercice::class, orphanRemoval: true)]
+    private $exercices;
+
     public function __construct()
     {
         $this->seances = new ArrayCollection();
         $this->avis = new ArrayCollection();
+        $this->exercices = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -217,6 +220,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($avi->getUser() === $this) {
                 $avi->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Exercice[]
+     */
+    public function getExercices(): Collection
+    {
+        return $this->exercices;
+    }
+
+    public function addExercice(Exercice $exercice): self
+    {
+        if (!$this->exercices->contains($exercice)) {
+            $this->exercices[] = $exercice;
+            $exercice->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExercice(Exercice $exercice): self
+    {
+        if ($this->exercices->removeElement($exercice)) {
+            // set the owning side to null (unless already changed)
+            if ($exercice->getUser() === $this) {
+                $exercice->setUser(null);
             }
         }
 
